@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Management System</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/reports.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <!-- Language change indicator -->
+    <div id="language-change-indicator" class="language-change-indicator">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobile-menu-overlay" class="mobile-menu-overlay hidden"></div>
+
+    <!-- Mobile Sidebar -->
+    <div id="mobile-sidebar" class="mobile-sidebar">
+        <div class="mobile-sidebar-header">
+            <h2>Menu</h2>
+            <button id="close-mobile-menu" class="btn btn-small"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="mobile-sidebar-content">
+            <div class="mobile-menu-section">
+                <h3>Navigation</h3>
+                <ul class="mobile-menu-list">
+                    <li><a href="#" id="mobile-dashboard-link"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li><a href="#" id="mobile-reports-link"><i class="fas fa-chart-bar"></i> Reports</a></li>
+                    <li><a href="#" id="mobile-user-settings-link"><i class="fas fa-user-cog"></i> User Settings</a></li>
+                    <li class="admin-only hidden"><a href="#" id="mobile-admin-link"><i class="fas fa-tachometer-alt"></i> Admin Dashboard</a></li>
+                </ul>
+            </div>
+            <div class="mobile-menu-section">
+                <h3>Settings</h3>
+                <div class="mobile-language-selector">
+                    <label for="mobile-language-select">Language:</label>
+                    <select id="mobile-language-select">
+                        <option value="en">English</option>
+                        <option value="es">Español</option>
+                        <option value="ar">العربية</option>
+                    </select>
+                </div>
+                <div class="mobile-theme-toggle">
+                    <label>Theme:</label>
+                    <button id="mobile-theme-toggle-btn" class="btn btn-small" title="Toggle Dark Mode">
+                        <i class="fas fa-moon"></i> <span id="mobile-theme-text">Dark Mode</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="header-left">
+                <button id="mobile-menu-btn" class="btn btn-small mobile-only"><i class="fas fa-bars"></i></button>
+                <h1 id="app-title">Project Management System</h1>
+            </div>
+            <div class="user-controls">
+                <div class="language-selector desktop-only">
+                    <label for="language-select" id="language-label">Language:</label>
+                    <select id="language-select">
+                        <option value="en">English</option>
+                        <option value="es">Español</option>
+                        <option value="ar">العربية</option>
+                    </select>
+                </div>
+                <button id="theme-toggle-btn" class="btn btn-small desktop-only" title="Toggle Dark Mode"><i class="fas fa-moon"></i></button>
+                <div class="notifications-dropdown">
+                    <button id="notifications-btn" class="btn btn-small" title="Notifications">
+                        <i class="fas fa-bell"></i>
+                        <span id="notifications-badge" class="notifications-badge hidden">0</span>
+                    </button>
+                    <div id="notifications-container" class="notifications-container hidden">
+                        <div class="notifications-header">
+                            <h3 id="notifications-title">Notifications</h3>
+                            <div class="notifications-actions">
+                                <button id="mark-all-read-btn" class="btn btn-small" title="Mark all as read">
+                                    <i class="fas fa-check-double"></i>
+                                </button>
+                                <button id="clear-all-notifications-btn" class="btn btn-small" title="Clear all">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="notifications-list" class="notifications-list">
+                            <!-- Notifications will be dynamically added here -->
+                            <div class="empty-notifications">
+                                <p>No notifications</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button id="reports-dashboard-btn" class="btn btn-small desktop-only"><i class="fas fa-chart-bar"></i></button>
+                <button id="user-settings-btn" class="btn btn-small desktop-only"><i class="fas fa-user-cog"></i></button>
+                <button id="admin-dashboard-btn" class="btn btn-small btn-primary admin-only desktop-only hidden"><i class="fas fa-tachometer-alt"></i></button>
+            </div>
+        </header>
+
+        <main>
+            <div class="dashboard">
+                <div class="dashboard-header">
+                    <h2>Projects Dashboard</h2>
+                    <button id="add-project-btn" class="btn btn-primary" onclick="UI.openProjectModal(); return false;"><i class="fas fa-plus"></i> New Project</button>
+                </div>
+
+                <div class="filters">
+                    <div class="search-container">
+                        <input type="text" id="search-input" placeholder="Search projects...">
+                        <button id="search-btn" class="btn"><i class="fas fa-search"></i></button>
+                    </div>
+                    <div class="filter-options">
+                        <select id="status-filter">
+                            <option value="all">All Statuses</option>
+                            <option value="not-started">Not Started</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                        <select id="sort-by">
+                            <option value="date-created">Date Created</option>
+                            <option value="deadline">Deadline</option>
+                            <option value="name">Name</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="projects-container" class="projects-container">
+                    <!-- Projects will be dynamically added here -->
+                </div>
+            </div>
+
+            <div id="admin-dashboard" class="admin-dashboard hidden">
+                <div class="admin-dashboard-header">
+                    <button id="back-to-dashboard-from-admin" class="btn btn-small"><i class="fas fa-arrow-left"></i> <span class="back-text">Back</span></button>
+                    <h2 id="admin-dashboard-title">Admin Dashboard</h2>
+                </div>
+
+                <div class="admin-dashboard-content">
+                    <div class="admin-stats-container">
+                        <div class="admin-stat-card">
+                            <div class="admin-stat-icon">
+                                <i class="fas fa-project-diagram"></i>
+                            </div>
+                            <div class="admin-stat-info">
+                                <h3 id="projects-count">0</h3>
+                                <p>Projects</p>
+                            </div>
+                        </div>
+
+                        <div class="admin-stat-card">
+                            <div class="admin-stat-icon">
+                                <i class="fas fa-tasks"></i>
+                            </div>
+                            <div class="admin-stat-info">
+                                <h3 id="tasks-count">0</h3>
+                                <p>Tasks</p>
+                            </div>
+                        </div>
+
+                        <div class="admin-stat-card">
+                            <div class="admin-stat-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="admin-stat-info">
+                                <h3 id="users-count">0</h3>
+                                <p>Users</p>
+                            </div>
+                        </div>
+
+                        <div class="admin-stat-card">
+                            <div class="admin-stat-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="admin-stat-info">
+                                <h3 id="completed-tasks-count">0</h3>
+                                <p>Completed Tasks</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="admin-panels">
+                        <div class="admin-panel">
+                            <h3>System Status</h3>
+                            <div class="admin-panel-content">
+                                <div class="status-item">
+                                    <span class="status-label">System Version:</span>
+                                    <span class="status-value">1.0.0</span>
+                                </div>
+                                <div class="status-item">
+                                    <span class="status-label">Last Update:</span>
+                                    <span class="status-value" id="last-update-date">-</span>
+                                </div>
+                                <div class="status-item">
+                                    <span class="status-label">Current Admin:</span>
+                                    <span class="status-value" id="current-admin-name">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="admin-panel">
+                            <h3>User Management</h3>
+                            <div class="admin-panel-content">
+                                <button id="manage-users-btn" class="btn btn-primary"><i class="fas fa-users-cog"></i> Manage Users</button>
+                                <button id="add-admin-user-btn" class="btn"><i class="fas fa-user-shield"></i> Add Admin</button>
+                            </div>
+                        </div>
+
+                        <div class="admin-panel">
+                            <h3>System Tools</h3>
+                            <div class="admin-panel-content">
+                                <button id="export-data-btn" class="btn"><i class="fas fa-file-export"></i> Export Data</button>
+                                <button id="import-data-btn" class="btn"><i class="fas fa-file-import"></i> Import Data</button>
+                                <button id="clear-data-btn" class="btn btn-danger"><i class="fas fa-trash-alt"></i> Clear All Data</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="reports-dashboard" class="reports-dashboard hidden">
+                <div class="reports-dashboard-header">
+                    <button id="back-to-dashboard-from-reports" class="btn btn-small"><i class="fas fa-arrow-left"></i> <span class="back-text">Back</span></button>
+                    <h2 id="reports-dashboard-title">Reports Dashboard</h2>
+                    <div class="reports-actions">
+                        <button id="refresh-dashboard-btn" class="btn btn-small" title="Refresh Data"><i class="fas fa-sync-alt"></i></button>
+                        <div class="export-dropdown">
+                            <button id="export-dropdown-btn" class="btn btn-small"><i class="fas fa-file-export"></i> <span>Export</span></button>
+                            <div class="export-dropdown-content hidden">
+                                <button id="export-pdf-btn" class="btn btn-small"><i class="fas fa-file-pdf"></i> PDF</button>
+                                <button id="export-excel-btn" class="btn btn-small"><i class="fas fa-file-excel"></i> Excel</button>
+                                <button id="export-csv-btn" class="btn btn-small"><i class="fas fa-file-csv"></i> CSV</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reports-filters">
+                    <div class="filter-group">
+                        <label for="filter-project">Project:</label>
+                        <select id="filter-project">
+                            <option value="all">All Projects</option>
+                            <!-- Projects will be dynamically added here -->
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="filter-date-range">Date Range:</label>
+                        <select id="filter-date-range">
+                            <option value="all">All Time</option>
+                            <option value="this-week">This Week</option>
+                            <option value="this-month">This Month</option>
+                            <option value="last-month">Last Month</option>
+                            <option value="this-quarter">This Quarter</option>
+                            <option value="this-year">This Year</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="reports-navigation">
+                    <ul class="dashboard-nav">
+                        <li class="dashboard-nav-item active" data-target="overview-section"><i class="fas fa-chart-pie"></i> <span>Overview</span></li>
+                        <li class="dashboard-nav-item" data-target="project-progress-section"><i class="fas fa-tasks"></i> <span>Project Progress</span></li>
+                        <li class="dashboard-nav-item" data-target="gantt-section"><i class="fas fa-calendar-alt"></i> <span>Timeline</span></li>
+                        <li class="dashboard-nav-item" data-target="performance-section"><i class="fas fa-user-clock"></i> <span>Performance</span></li>
+                        <li class="dashboard-nav-item" data-target="deadlines-section"><i class="fas fa-hourglass-half"></i> <span>Deadlines</span></li>
+                        <li class="dashboard-nav-item" data-target="kpi-section"><i class="fas fa-tachometer-alt"></i> <span>KPIs</span></li>
+                    </ul>
+                </div>
+
+                <div class="dashboard-sections">
+                    <div id="overview-section" class="dashboard-section">
+                        <h3>Overview</h3>
+                        <div class="charts-row">
+                            <div class="chart-container">
+                                <canvas id="tasks-status-chart-container"></canvas>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="tasks-priority-chart-container"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="project-progress-section" class="dashboard-section hidden">
+                        <h3>Project Progress</h3>
+                        <div class="chart-container full-width">
+                            <canvas id="project-progress-chart-container"></canvas>
+                        </div>
+                    </div>
+
+                    <div id="gantt-section" class="dashboard-section hidden">
+                        <h3>Project Timeline</h3>
+                        <div class="chart-container full-width">
+                            <div id="gantt-chart-container" class="gantt-chart"></div>
+                        </div>
+                    </div>
+
+                    <div id="performance-section" class="dashboard-section hidden">
+                        <h3>User Performance</h3>
+                        <div class="chart-container full-width">
+                            <canvas id="user-performance-container"></canvas>
+                        </div>
+                    </div>
+
+                    <div id="deadlines-section" class="dashboard-section hidden">
+                        <h3>Upcoming Deadlines</h3>
+                        <div id="deadlines-container" class="deadlines-container">
+                            <!-- Deadlines will be dynamically added here -->
+                        </div>
+                    </div>
+
+                    <div id="kpi-section" class="dashboard-section hidden">
+                        <h3>Key Performance Indicators</h3>
+                        <div id="kpi-container" class="kpi-container">
+                            <!-- KPIs will be dynamically added here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="project-details" class="project-details hidden">
+                <div class="project-details-header">
+                    <button id="back-to-dashboard" class="btn btn-small"><i class="fas fa-arrow-left"></i> Back</button>
+                    <h2 id="project-title">Project Title</h2>
+                    <div class="project-actions">
+                        <button id="edit-project-btn" class="btn btn-small"><i class="fas fa-edit"></i></button>
+                        <button id="delete-project-btn" class="btn btn-small btn-danger"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+
+                <div class="project-info">
+                    <div class="info-item">
+                        <span class="label">Status:</span>
+                        <span id="project-status" class="status">Not Started</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Deadline:</span>
+                        <span id="project-deadline">N/A</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Description:</span>
+                        <p id="project-description">Project description will appear here.</p>
+                    </div>
+                </div>
+
+                <div class="tasks-section">
+                    <div class="tasks-header">
+                        <h3>Tasks</h3>
+                        <button id="add-task-btn" class="btn btn-primary"><i class="fas fa-plus"></i> New Task</button>
+                    </div>
+                    <div class="task-filters">
+                        <select id="task-status-filter">
+                            <option value="all">All Statuses</option>
+                            <option value="not-started">Not Started</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                        <select id="task-priority-filter">
+                            <option value="all">All Priorities</option>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div id="tasks-container" class="tasks-container">
+                        <!-- Tasks will be dynamically added here -->
+                    </div>
+                </div>
+
+                <div class="comments-section">
+                    <div class="comments-header">
+                        <h3 id="comments-title">Comments</h3>
+                    </div>
+                    <div class="comment-form">
+                        <textarea id="project-comment-input" placeholder="Write your comment here... Use @ to mention users and Markdown for formatting"></textarea>
+                        <div class="comment-form-actions">
+                            <div class="btn-group">
+                                <button id="show-markdown-guide-btn" class="btn btn-small">
+                                    <i class="fas fa-question-circle"></i> Markdown Guide
+                                </button>
+                            </div>
+                            <button id="add-project-comment-btn" class="btn btn-primary">
+                                <i class="fas fa-comment"></i> Add Comment
+                            </button>
+                        </div>
+                        <div id="markdown-guide" class="markdown-guide hidden">
+                            <div class="markdown-guide-title">Markdown Guide</div>
+                            <div class="markdown-guide-items">
+                                <span class="markdown-guide-item">Bold: **text**</span>
+                                <span class="markdown-guide-item">Italic: *text*</span>
+                                <span class="markdown-guide-item">Link: [text](url)</span>
+                                <span class="markdown-guide-item">List: * item or 1. item</span>
+                                <span class="markdown-guide-item">Heading: # Heading</span>
+                                <span class="markdown-guide-item">Mention users with @username</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="project-comments-container" class="comments-container">
+                        <!-- Comments will be dynamically added here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="project-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="project-modal-title">Add New Project</h2>
+            <form id="project-form">
+                <div class="form-group">
+                    <label for="project-name">Project Name</label>
+                    <input type="text" id="project-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="project-description-input">Description</label>
+                    <textarea id="project-description-input" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="project-status-input">Status</label>
+                    <select id="project-status-input">
+                        <option value="not-started">Not Started</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="project-deadline-input">Deadline</label>
+                    <input type="date" id="project-deadline-input">
+                </div>
+                <div class="form-actions">
+                    <button type="button" id="cancel-project-btn" class="btn">Cancel</button>
+                    <button type="submit" id="save-project-btn" class="btn btn-primary">Save Project</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="task-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="task-modal-title">Add New Task</h2>
+            <form id="task-form">
+                <div class="form-group">
+                    <label for="task-name">Task Name</label>
+                    <input type="text" id="task-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="task-description">Description</label>
+                    <textarea id="task-description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="task-status">Status</label>
+                    <select id="task-status">
+                        <option value="not-started">Not Started</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="task-priority">Priority</label>
+                    <select id="task-priority">
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="task-deadline">Deadline</label>
+                    <input type="date" id="task-deadline">
+                </div>
+                <div class="form-group">
+                    <label for="task-assigned-to">Assigned To</label>
+                    <select id="task-assigned-to">
+                        <option value="">Unassigned</option>
+                        <!-- Users will be dynamically added here -->
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" id="cancel-task-btn" class="btn">Cancel</button>
+                    <button type="submit" id="save-task-btn" class="btn btn-primary">Save Task</button>
+                </div>
+            </form>
+
+            <div class="comments-section">
+                <div class="comments-header">
+                    <h3 id="task-comments-title">Comments</h3>
+                </div>
+                <div class="comment-form">
+                    <textarea id="task-comment-input" placeholder="Write your comment here... Use @ to mention users and Markdown for formatting"></textarea>
+                    <div class="comment-form-actions">
+                        <div class="btn-group">
+                            <button id="show-task-markdown-guide-btn" class="btn btn-small">
+                                <i class="fas fa-question-circle"></i> Markdown Guide
+                            </button>
+                        </div>
+                        <button id="add-task-comment-btn" class="btn btn-primary">
+                            <i class="fas fa-comment"></i> Add Comment
+                        </button>
+                    </div>
+                    <div id="task-markdown-guide" class="markdown-guide hidden">
+                        <div class="markdown-guide-title">Markdown Guide</div>
+                        <div class="markdown-guide-items">
+                            <span class="markdown-guide-item">Bold: **text**</span>
+                            <span class="markdown-guide-item">Italic: *text*</span>
+                            <span class="markdown-guide-item">Link: [text](url)</span>
+                            <span class="markdown-guide-item">List: * item or 1. item</span>
+                            <span class="markdown-guide-item">Heading: # Heading</span>
+                            <span class="markdown-guide-item">Mention users with @username</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="task-comments-container" class="comments-container">
+                    <!-- Comments will be dynamically added here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="user-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>User Management</h2>
+            <div class="user-list-section">
+                <h3>Users</h3>
+                <div id="users-container">
+                    <!-- Users will be dynamically added here -->
+                </div>
+                <button id="add-user-btn" class="btn btn-primary"><i class="fas fa-plus"></i> Add User</button>
+            </div>
+            <div id="user-form-container" class="hidden">
+                <h3 id="user-form-title">Add New User</h3>
+                <form id="user-form">
+                    <div class="form-group">
+                        <label for="user-name">Name</label>
+                        <input type="text" id="user-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="user-email">Email</label>
+                        <input type="email" id="user-email" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" id="cancel-user-btn" class="btn">Cancel</button>
+                        <button type="submit" id="save-user-btn" class="btn btn-primary">Save User</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/models.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/language.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/mobile.js"></script>
+    <script src="js/notifications.js"></script>
+    <script src="js/comments.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
